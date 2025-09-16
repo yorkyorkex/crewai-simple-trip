@@ -47,11 +47,20 @@ class WeatherTool(BaseTool):
     )
     args_schema: Type[BaseModel] = WeatherToolInput
 
-    def _run(self, location: str, query_type: str = "current") -> str:
-        """Get weather information using search."""
-        try:
+    # Shared search tool instance
+    _search_tool = None
+
+    def _get_search_tool(self):
+        """Get or create shared search tool instance."""
+        if self.__class__._search_tool is None:
             from .search_tool import SearchTool
-            search_tool = SearchTool()
+            self.__class__._search_tool = SearchTool()
+        return self.__class__._search_tool
+
+    def _run(self, location: str, query_type: str = "current") -> str:
+        """Get weather information using shared search tool."""
+        try:
+            search_tool = self._get_search_tool()
             
             if query_type == "current":
                 query = f"current weather in {location}"

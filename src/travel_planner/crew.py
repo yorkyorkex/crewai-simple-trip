@@ -5,6 +5,7 @@ from typing import List
 from travel_planner.tools.search_tool import SearchTool
 from travel_planner.tools.travel_tools import CalculatorTool, WeatherTool
 from travel_planner.tools.html_generator import HTMLGenerator
+from travel_planner.tools.tool_registry import ToolRegistry
 
 @CrewBase
 class TravelPlanner():
@@ -17,32 +18,42 @@ class TravelPlanner():
     def travel_researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['travel_researcher'], # type: ignore[index]
-            tools=[SearchTool(), WeatherTool()],
-            verbose=True
+            tools=[
+                ToolRegistry.get_tool(SearchTool),
+                ToolRegistry.get_tool(WeatherTool)
+            ],
+            verbose=False
         )
 
     @agent
     def itinerary_planner(self) -> Agent:
         return Agent(
             config=self.agents_config['itinerary_planner'], # type: ignore[index]
-            tools=[SearchTool(), CalculatorTool(), HTMLGenerator()],
-            verbose=True
+            tools=[
+                ToolRegistry.get_tool(SearchTool),
+                ToolRegistry.get_tool(CalculatorTool),
+                ToolRegistry.get_tool(HTMLGenerator)
+            ],
+            verbose=False
         )
 
     @agent
     def local_expert(self) -> Agent:
         return Agent(
             config=self.agents_config['local_expert'], # type: ignore[index]
-            tools=[SearchTool()],
-            verbose=True
+            tools=[ToolRegistry.get_tool(SearchTool)],
+            verbose=False
         )
 
     @agent
     def budget_advisor(self) -> Agent:
         return Agent(
             config=self.agents_config['budget_advisor'], # type: ignore[index]
-            tools=[CalculatorTool(), SearchTool()],
-            verbose=True
+            tools=[
+                ToolRegistry.get_tool(CalculatorTool),
+                ToolRegistry.get_tool(SearchTool)
+            ],
+            verbose=False
         )
 
     @task
@@ -85,5 +96,6 @@ class TravelPlanner():
             agents=self.agents, # Automatically created by the @agent decorator
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.sequential,
-            verbose=True,
+            verbose=False,
+            max_iter=2  # Limit iterations for faster execution
         )
