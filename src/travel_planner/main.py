@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+import sys
+import warnings
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+
+# Add the src directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from travel_planner.crew import TravelPlanner
+
+# Load environment variables from .env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
+
+warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+def get_season(month):
+    """Determine season based on month number"""
+    if month in [12, 1, 2]:
+        return "Winter"
+    elif month in [3, 4, 5]:
+        return "Spring"
+    elif month in [6, 7, 8]:
+        return "Summer"
+    else:
+        return "Autumn"
+
+def get_user_input():
+    """Get travel planning inputs from user."""
+    print("=== Travel Planner AI ===")
+    print("Let me help you plan the perfect trip!")
+    print()
+    
+    destination = input("Enter your desired destination (e.g., Tokyo, Japan): ").strip()
+    
+    while True:
+        try:
+            duration = int(input("Enter trip duration in days (e.g., 7): ").strip())
+            break
+        except ValueError:
+            print("Please enter a valid number")
+    
+    budget = input("Enter your budget (e.g., $3000 USD): ").strip()
+    
+    travel_style = input("Travel style (optional, e.g., luxury, budget, adventure, cultural): ").strip()
+    
+    # Get travel start date
+    while True:
+        try:
+            start_date_input = input("Enter your travel start date (YYYY-MM-DD, e.g., 2025-12-15): ").strip()
+            start_date = datetime.strptime(start_date_input, '%Y-%m-%d')
+            break
+        except ValueError:
+            print("Please enter a valid date in YYYY-MM-DD format")
+    
+    return {
+        'destination': destination,
+        'duration': duration,
+        'budget': budget,
+        'travel_style': travel_style or 'moderate',
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'travel_month': start_date.strftime('%B'),
+        'travel_season': get_season(start_date.month),
+        'current_year': str(datetime.now().year)
+    }
+
+def run():
+    """
+    Run the travel planning crew.
+    """
+    try:
+        # Check if running in interactive mode or with predefined inputs
+        if len(sys.argv) > 1 and sys.argv[1] == "--demo":
+            # Demo mode with predefined inputs
+            # Demo with a future date for better seasonal planning
+            demo_date = datetime(2025, 12, 15)  # Winter season
+            inputs = {
+                'destination': 'Tokyo, Japan',
+                'duration': 7,
+                'budget': '$3000 USD',
+                'travel_style': 'cultural',
+                'start_date': demo_date.strftime('%Y-%m-%d'),
+                'travel_month': demo_date.strftime('%B'),
+                'travel_season': get_season(demo_date.month),
+                'current_year': str(datetime.now().year)
+            }
+            print("Running demo mode with Tokyo, Japan...")
+        else:
+            # Interactive mode
+            inputs = get_user_input()
+        
+        print(f"\nPlanning your {inputs['duration']}-day trip to {inputs['destination']}...")
+        print(f"Budget: {inputs['budget']}")
+        print("Please wait, our AI agent team is working...\n")
+        
+        result = TravelPlanner().crew().kickoff(inputs=inputs)
+        
+        print("\n" + "="*50)
+        print("Travel Planning Complete!")
+        print("Detailed travel plan has been saved to travel_plan.md")
+        print("="*50)
+        
+        return result
+        
+    except Exception as e:
+        raise Exception(f"An error occurred while running the crew: {e}")
+
+
+if __name__ == "__main__":
+    run()
